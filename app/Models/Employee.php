@@ -9,8 +9,9 @@ class Employee extends Model {
     use HasFactory;
 
     protected $fillable = ['login','name','cpf','email','password'];
+     
 
-    protected $hidden = ['password'];
+    //protected $hidden = ['password'];
 
     public function companies() {
         return $this->belongsToMany(Company::class);
