@@ -28,19 +28,19 @@ class EmployeeController extends Controller {
             'login' => [
                 'required',
                 'unique:employees,login',
-                'regex:/^[A-Za-z0-9_.]+$/', // sem acentos, sem caracteres especiais
+                'regex:/^[A-Za-z0-9_.]+$/',
             ],
             'name' => 'required|string',
             'cpf' => [
                 'required',
-                'digits:11',                 // força 11 dígitos
+                'digits:11',                
                 'unique:employees,cpf'
             ],
             'email' => 'required|email|unique:employees,email',
             'password' => 'required|string|min:6',
             'company_ids' => 'array'
         ]);
-
+        // Caso queeira visualizar a senha em si comentar a hash abaixo   
         // Hash da senha
         $validated['password'] = Hash::make($validated['password']);
 
@@ -48,7 +48,6 @@ class EmployeeController extends Controller {
         $employeeData = $validated;
         unset($employeeData['company_ids']);
 
-        // Criar funcionário
         $employee = Employee::create($employeeData);
 
         // Relacionar empresas

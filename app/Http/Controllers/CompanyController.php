@@ -30,11 +30,10 @@ class CompanyController extends Controller {
             'employee_ids' => 'array'
         ]);
 
-        // Separar employee_ids (não pertence à tabela companies)
+        
         $companyData = $validated;
         unset($companyData['employee_ids']);
 
-        // Criar empresa
         $company = Company::create($companyData);
 
         // Sincronizar funcionários na tabela pivot
