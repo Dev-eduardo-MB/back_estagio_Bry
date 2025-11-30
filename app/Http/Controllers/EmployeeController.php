@@ -8,62 +8,72 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rule;
 
 class EmployeeController extends Controller {
+
     public function index() {
         return Employee::with('companies')->get();
     }
 
     public function show($id) {
         $employee = Employee::with('companies')->find($id);
-        if (!$employee) return response()->json(['message'=>'Employee not found'],404);
+
+        if (!$employee)
+            return response()->json(['message' => 'Employee not found'], 404);
+
         return $employee;
     }
 
     public function store(Request $request) {
-        $request->validate([
-            'login'=>'required|alpha_num|unique:employees,login',
-            'name'=>'required|string',
-            'cpf'=>'required|unique:employees,cpf',
-            'email'=>'required|email|unique:employees,email',
-            'password'=>'required|string|min:6',
-            'company_ids'=>'array'
-        ]);
 
-        $employee = Employee::create([
-            'login'=>$request->login,
-            'name'=>$request->name,
-            'cpf'=>$request->cpf,
-            'email'=>$request->email,
-            'password'=>Hash::make($request->password)
-        ]);
+    $validated = $request->validate([
+        'login' => 'required|alpha_num|unique:employees,login',
+        'name' => 'required|string',
+        'cpf' => 'required|unique:employees,cpf',
+        'email' => 'required|email|unique:employees,email',
+        'password' => 'required|string|min:6',
+        'company_ids' => 'array'
+    ]);
 
-        if($request->has('company_ids')){
-            $employee->companies()->sync($request->company_ids);
-        }
+    // Hash da senha
+    $validated['password'] = Hash::make($validated['password']);
 
-        return response()->json($employee->load('companies'),201);
+    // Remover company_ids para não tentar salvar na tabela employees
+    $employeeData = $validated;
+    unset($employeeData['company_ids']);
+
+    // Criar funcionário sem company_ids
+    $employee = Employee::create($employeeData);
+
+    // Relacionar empresas na tabela pivot
+    if (!empty($validated['company_ids'])) {
+        $employee->companies()->sync($validated['company_ids']);
     }
 
-    public function update(Request $request, $id) {
-        $employee = Employee::find($id);
-        if(!$employee) return response()->json(['message'=>'Employee not found'],404);
+    return response()->json($employee->load('companies'), 201);
+}
 
-        $request->validate([
-            'login'=>['alpha_num',Rule::unique('employees')->ignore($employee->id)],
-            'name'=>'string',
-            'cpf'=>Rule::unique('employees')->ignore($employee->id),
-            'email'=>Rule::unique('employees')->ignore($employee->id),
-            'password'=>'string|min:6',
-            'company_ids'=>'array'
+    public function update(Request $request, $id) {
+
+        $employee = Employee::find($id);
+        if (!$employee)
+            return response()->json(['message' => 'Employee not found'], 404);
+
+        $validated = $request->validate([
+            'login' => ['alpha_num', Rule::unique('employees')->ignore($employee->id)],
+            'name' => 'string',
+            'cpf' => Rule::unique('employees')->ignore($employee->id),
+            'email' => Rule::unique('employees')->ignore($employee->id),
+            'password' => 'string|min:6',
+            'company_ids' => 'array'
         ]);
 
-        if($request->has('password')){
-            $request->merge(['password'=>Hash::make($request->password)]);
+        if (isset($validated['password'])) {
+            $validated['password'] = Hash::make($validated['password']);
         }
 
-        $employee->update($request->all());
+        $employee->update($validated);
 
-        if($request->has('company_ids')){
-            $employee->companies()->sync($request->company_ids);
+        if (isset($validated['company_ids'])) {
+            $employee->companies()->sync($validated['company_ids']);
         }
 
         return $employee->load('companies');
@@ -71,8 +81,12 @@ class EmployeeController extends Controller {
 
     public function destroy($id) {
         $employee = Employee::find($id);
-        if(!$employee) return response()->json(['message'=>'Employee not found'],404);
+
+        if (!$employee)
+            return response()->json(['message' => 'Employee not found'], 404);
+
         $employee->delete();
-        return response()->json(['message'=>'Deleted successfully']);
+
+        return response()->json(['message' => 'Deleted successfully']);
     }
 }
