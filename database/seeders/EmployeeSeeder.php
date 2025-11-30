@@ -12,7 +12,7 @@ class EmployeeSeeder extends Seeder
     {
         $companies = Company::all();
 
-        Employee::factory(1)->create()->each(function ($employee) use ($companies) {
+        Employee::factory(2)->create()->each(function ($employee) use ($companies) {
             $employee->companies()->attach(
                 $companies->random(rand(1, 3))->pluck('id')
             );
