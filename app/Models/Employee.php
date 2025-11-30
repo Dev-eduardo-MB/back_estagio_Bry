@@ -10,7 +10,7 @@ class Employee extends Model {
 
     protected $fillable = ['login','name','cpf','email','password'];
      
-
+    //proteção desativada para passar a senha no objeto 
     //protected $hidden = ['password'];
 
     public function companies() {
