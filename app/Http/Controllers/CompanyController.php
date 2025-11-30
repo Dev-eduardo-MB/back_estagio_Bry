@@ -25,7 +25,7 @@ class CompanyController extends Controller {
 
         $validated = $request->validate([
             'name' => 'required|string',
-            'cnpj' => 'required|unique:companies,cnpj',
+            'cnpj' => 'required|digits:14|unique:companies,cnpj',
             'address' => 'required|string',
             'employee_ids' => 'array'
         ]);
@@ -54,8 +54,10 @@ class CompanyController extends Controller {
         $validated = $request->validate([
             'name' => 'string',
             'cnpj' => [
+                'digits:14',
                 Rule::unique('companies')->ignore($company->id)
             ],
+
             'address' => 'string',
             'employee_ids' => 'array'
         ]);

@@ -15,7 +15,7 @@ class StoreCompanyRequest extends FormRequest
     {
         return [
             'name' => 'required|string|max:255',
-            'cnpj' => 'required|string|size:14|unique:companies,cnpj',
+            'cnpj' => 'required|digits:14|unique:companies,cnpj',
             'address' => 'required|string|max:255',
 
             'employee_ids' => 'array',

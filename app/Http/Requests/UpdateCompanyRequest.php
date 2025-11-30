@@ -16,7 +16,7 @@ class UpdateCompanyRequest extends FormRequest
     {
         return [
             'name'    => 'sometimes|string|max:255',
-            'cnpj'    => ['sometimes', 'string', 'size:14', Rule::unique('companies')->ignore($this->company)],
+            'cnpj' => ['digits:14',Rule::unique('companies')->ignore($company->id)],
             'address' => 'sometimes|string|max:255',
 
             'employee_ids' => 'array',
