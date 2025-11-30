@@ -14,12 +14,12 @@ class StoreEmployeeRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'login' => 'required|string|alpha_dash|unique:employees,login',
-            'name'  => 'required|string|max:255',
-            'cpf'   => 'required|string|size:11|unique:employees,cpf',
-            'email' => 'required|email|unique:employees,email',
-            'password' => 'required|string|min:6',
-
+            'login' => ['regex:/^[A-Za-z0-9_.]+$/', Rule::unique('employees')->ignore($employee->id)],
+            'name' => 'string',
+            'cpf' => ['digits:11', Rule::unique('employees')->ignore($employee->id)],
+            'email' => ['email', Rule::unique('employees')->ignore($employee->id)],
+            'password' => 'string|min:6',
+             
             'company_ids' => 'array',
             'company_ids.*' => 'exists:companies,id',
         ];

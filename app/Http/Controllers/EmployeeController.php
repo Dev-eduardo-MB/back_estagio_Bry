@@ -24,32 +24,40 @@ class EmployeeController extends Controller {
 
     public function store(Request $request) {
 
-    $validated = $request->validate([
-        'login' => 'required|alpha_num|unique:employees,login',
-        'name' => 'required|string',
-        'cpf' => 'required|unique:employees,cpf',
-        'email' => 'required|email|unique:employees,email',
-        'password' => 'required|string|min:6',
-        'company_ids' => 'array'
-    ]);
+        $validated = $request->validate([
+            'login' => [
+                'required',
+                'unique:employees,login',
+                'regex:/^[A-Za-z0-9_.]+$/', // sem acentos, sem caracteres especiais
+            ],
+            'name' => 'required|string',
+            'cpf' => [
+                'required',
+                'digits:11',                 // força 11 dígitos
+                'unique:employees,cpf'
+            ],
+            'email' => 'required|email|unique:employees,email',
+            'password' => 'required|string|min:6',
+            'company_ids' => 'array'
+        ]);
 
-    // Hash da senha
-    $validated['password'] = Hash::make($validated['password']);
+        // Hash da senha
+        $validated['password'] = Hash::make($validated['password']);
 
-    // Remover company_ids para não tentar salvar na tabela employees
-    $employeeData = $validated;
-    unset($employeeData['company_ids']);
+        // Remover company_ids
+        $employeeData = $validated;
+        unset($employeeData['company_ids']);
 
-    // Criar funcionário sem company_ids
-    $employee = Employee::create($employeeData);
+        // Criar funcionário
+        $employee = Employee::create($employeeData);
 
-    // Relacionar empresas na tabela pivot
-    if (!empty($validated['company_ids'])) {
-        $employee->companies()->sync($validated['company_ids']);
+        // Relacionar empresas
+        if (!empty($validated['company_ids'])) {
+            $employee->companies()->sync($validated['company_ids']);
+        }
+
+        return response()->json($employee->load('companies'), 201);
     }
-
-    return response()->json($employee->load('companies'), 201);
-}
 
     public function update(Request $request, $id) {
 
@@ -57,14 +65,15 @@ class EmployeeController extends Controller {
         if (!$employee)
             return response()->json(['message' => 'Employee not found'], 404);
 
-        $validated = $request->validate([
-            'login' => ['alpha_num', Rule::unique('employees')->ignore($employee->id)],
-            'name' => 'string',
-            'cpf' => Rule::unique('employees')->ignore($employee->id),
-            'email' => Rule::unique('employees')->ignore($employee->id),
-            'password' => 'string|min:6',
-            'company_ids' => 'array'
-        ]);
+       $validated = $request->validate([
+        'login' => ['regex:/^[A-Za-z0-9_.]+$/', Rule::unique('employees')->ignore($employee->id)],
+        'name' => 'string',
+        'cpf' => ['digits:11', Rule::unique('employees')->ignore($employee->id)],
+        'email' => ['email', Rule::unique('employees')->ignore($employee->id)],
+        'password' => 'string|min:6',
+        'company_ids' => 'array'
+    ]);
+
 
         if (isset($validated['password'])) {
             $validated['password'] = Hash::make($validated['password']);
